@@ -12,6 +12,7 @@ class MazeCell:
         self.next = None
         self.neighbours = {"left": None, "down": None, "up": None, "right": None}
         self.maze = maze
+        self.stale = False
 
     def get_neighbours(self):
         x, y = self.position
@@ -39,13 +40,14 @@ class MazeCell:
     def add_to_route(self, route, maze):
 
         self.empty = False
+        self.stale = True
 
         neighbouring_cells = [n for n in self.neighbours.values() if n is not None]
 
         for number_of_neighbours in reversed(range(0, 4)):
 
-            valid_neighbours = [n for n in neighbouring_cells if
-                                n.empty and n.count_empty_neighbours() <= number_of_neighbours]
+            valid_neighbours = [n for n in neighbouring_cells if n.empty and n.count_empty_neighbours() <= number_of_neighbours]
+            #valid_neighbours = [n for n in neighbouring_cells if n.empty]
 
             if valid_neighbours:
                 return self.add_random_neighbour(valid_neighbours)
@@ -81,19 +83,19 @@ def setup_maze(cell_size, maze_width, maze_height):
     return maze
 
 
-def initialise_route(maze,starting_x,starting_y):
+def initialise_route(maze, starting_x, starting_y):
 
     next_cell = maze[starting_x][starting_y]
-    next_cell.exits["up"] = True
+
     return [next_cell]
 
 
 def backtrack(route, random_branch=False):
-    nonempty_cells = [n for n in route if n.count_empty_neighbours() > 0]
+    nonempty_cells = [n for n in route if n.count_empty_neighbours()]
     if nonempty_cells:
         if random_branch:
-            cell = random.choice(nonempty_cells)
+            return random.choice(nonempty_cells)
         else:
-            cell = nonempty_cells[0]
+            return nonempty_cells[0]
 
-        return cell
+
