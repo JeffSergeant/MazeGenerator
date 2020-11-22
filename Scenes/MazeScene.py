@@ -1,21 +1,23 @@
 from Scenes.IScene import IScene
+
 import pygame
 import mazehandling as mh
 
 class MazeScene(IScene):
-    def __init__(self,args):
+    def __init__(self,args,next_scene):
+        self.args = args
         self.cell_size = args["cell_size"]
         self.maze_height = args["maze_height"]
         self.maze_width = args["maze_width"]
         self.game_window = self.setup_window(self.cell_size, self.maze_width, self.maze_height)
         self.maze = mh.setup_maze(self.cell_size, self.maze_width, self.maze_height)
         self.next_cell = None
+        self.next_scene = next_scene
         self.counter = 0
 
     def initialise(self):
         pygame.init()
         self.game_window.fill((255, 255, 255))
-
         return True
 
     def update(self):
@@ -24,6 +26,7 @@ class MazeScene(IScene):
         for event in pygame.event.get():
             # Close the program if the user presses the 'X'
             if event.type == pygame.QUIT:
+
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.next_cell is None:  # If we're not currently drawing a maze, draw a new one where the user clicked
@@ -35,10 +38,13 @@ class MazeScene(IScene):
                     x = (clicked_location[0] // self.cell_size)-1
                     y = (clicked_location[1] // self.cell_size)-1
 
-                    if x < self.maze_width and y < self.maze_height:
-                        route = mh.initialise_route(self.maze, x, y)
-                        self.next_cell = route[0]
-#
+                    try:
+                        self.maze[x][y]
+                    except IndexError:
+                        x,y = (0,0)
+                    route = mh.initialise_route(self.maze, x, y)
+                    self.next_cell = route[0]
+
         if self.next_cell:
 
             self.next_cell = self.next_cell.add_to_route(self.maze, self.route)
@@ -49,10 +55,9 @@ class MazeScene(IScene):
             self.route.append(self.next_cell)
 
         #self.game_window.fill((255, 255, 255))
-        self.counter += 1
-        if not self.counter % int((self.maze_width*self.maze_height)*0.01):
-            self.draw_walls_from_maze()
-            self.counter =0
+
+        self.draw_walls_from_maze()
+
 
         pygame.display.update()
         return True
@@ -72,7 +77,7 @@ class MazeScene(IScene):
         top = cell.position[1] * self.cell_size+self.cell_size
         bottom = top + self.cell_size
 
-        exit_colour = (245  ,245, 245)
+        exit_colour = (255, 255, 255)
         wall_colour = (25   ,25 , 25 )
 
         corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
@@ -84,11 +89,11 @@ class MazeScene(IScene):
 
         pygame.draw.rect(self.game_window,exit_colour,(left,top,self.cell_size,self.cell_size))
 
+
         for side in lines.keys():
             if not cell.exits[side]:
                 pygame.draw.line(self.game_window, wall_colour, lines[side][0], lines[side][1], 2)
 
-        #pygame.draw.rect(self.game_window,colour,(left,top,self.cell_size,self.cell_size))
 
     def setup_window(self,cell_size, maze_width, maze_height):
         pygame.init()
@@ -104,4 +109,4 @@ class MazeScene(IScene):
 
     def close(self):
         pygame.display.quit()
-        return None
+        return self.next_scene(MazeScene, self.args)
