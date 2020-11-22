@@ -4,63 +4,77 @@ import pygame
 import mazehandling as mh
 
 class MazeScene(IScene):
-    def __init__(self,args,next_scene):
+    def __init__(self, args, next_scene):
         self.args = args
         self.cell_size = args["cell_size"]
         self.maze_height = args["maze_height"]
         self.maze_width = args["maze_width"]
         self.game_window = self.setup_window(self.cell_size, self.maze_width, self.maze_height)
-        self.maze = mh.setup_maze(self.cell_size, self.maze_width, self.maze_height)
         self.next_cell = None
         self.next_scene = next_scene
-        self.counter = 0
+        self.maze = []
+        self.route = []
 
     def initialise(self):
         pygame.init()
         self.game_window.fill((255, 255, 255))
+        self.draw_maze(0, 0)
+
         return True
 
     def update(self):
-        # Loop through all active events
+        # called once per game-loop
 
         for event in pygame.event.get():
-            # Close the program if the user presses the 'X'
+            # If the user presses the 'X', return false so the runner knows we're done
             if event.type == pygame.QUIT:
-
                 return False
+
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.next_cell is None:  # If we're not currently drawing a maze, draw a new one where the user clicked
-                    self.maze = mh.setup_maze(self.cell_size, self.maze_width, self.maze_height)
-                    self.route = []
-                    self.game_window.fill((225, 225, 225))
+                # If we're not currently drawing a maze, draw a new one where the user clicked
+                if self.next_cell is None:
+                    self.create_maze_on_mouseclick()
 
-                    clicked_location = pygame.mouse.get_pos()
-                    x = (clicked_location[0] // self.cell_size)-1
-                    y = (clicked_location[1] // self.cell_size)-1
+        # Draw as many cells as we can in 1/30th of a second, the human eye can't see more than 30 fps anyway
+        start_time = pygame.time.get_ticks()
 
-                    try:
-                        self.maze[x][y]
-                    except IndexError:
-                        x,y = (0,0)
-                    route = mh.initialise_route(self.maze, x, y)
-                    self.next_cell = route[0]
+        while pygame.time.get_ticks()-start_time<(1000/30):
 
-        if self.next_cell:
+            if self.next_cell:
+                # if our last iteration found a cell, add it to the route and find the next one
+                self.next_cell = self.next_cell.add_to_route(self.maze, self.route)
 
-            self.next_cell = self.next_cell.add_to_route(self.maze, self.route)
+                # if we don't find a next cell, we've reached the end of the path, backtrack until we find a route
+                if not self.next_cell:
+                    self.next_cell = mh.backtrack(self.route, random_branch=False)
 
-            if not self.next_cell:
-                self.next_cell = mh.backtrack(self.route, random_branch=False)
-
-            self.route.append(self.next_cell)
-
-        #self.game_window.fill((255, 255, 255))
+                self.route.append(self.next_cell)
 
         self.draw_walls_from_maze()
 
-
         pygame.display.update()
         return True
+
+    def create_maze_on_mouseclick(self):
+
+        clicked_location = pygame.mouse.get_pos()
+        x = (clicked_location[0] // self.cell_size) - 1
+        y = (clicked_location[1] // self.cell_size) - 1
+        # if the click is outside the maze size, start from origin
+
+        x = min(abs(x), self.maze_width-1)
+        y = min(abs(y), self.maze_height-1)
+
+        self.draw_maze(x, y)
+
+    def draw_maze(self, x, y):
+
+        self.maze = mh.setup_maze(self.cell_size, self.maze_width, self.maze_height)
+        self.route = []
+        self.game_window.fill((225, 225, 225))
+        route = mh.initialise_route(self.maze, x, y)
+        self.next_cell = route[0]
+
 
     def draw_walls_from_maze(self):
         self.maze[0][0].exits["up"] = True
@@ -78,7 +92,7 @@ class MazeScene(IScene):
         bottom = top + self.cell_size
 
         exit_colour = (255, 255, 255)
-        wall_colour = (25   ,25 , 25 )
+        wall_colour = (25 , 25 , 25 )
 
         corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
         lines = {}
@@ -88,7 +102,6 @@ class MazeScene(IScene):
         lines["down"] = [(left, bottom), (right, bottom)]
 
         pygame.draw.rect(self.game_window,exit_colour,(left,top,self.cell_size,self.cell_size))
-
 
         for side in lines.keys():
             if not cell.exits[side]:

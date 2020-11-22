@@ -84,9 +84,7 @@ def setup_maze(cell_size, maze_width, maze_height):
 
 
 def initialise_route(maze, starting_x, starting_y):
-
     next_cell = maze[starting_x][starting_y]
-
     return [next_cell]
 
 
