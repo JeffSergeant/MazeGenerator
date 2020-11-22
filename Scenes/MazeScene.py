@@ -9,7 +9,10 @@ class MazeScene(IScene):
         self.cell_size = args["cell_size"]
         self.maze_height = args["maze_height"]
         self.maze_width = args["maze_width"]
-        self.game_window = self.setup_window(self.cell_size, self.maze_width, self.maze_height)
+        self.margin = 10
+
+        self.game_window = self.setup_window()
+
         self.next_cell = None
         self.next_scene = next_scene
         self.maze = []
@@ -38,15 +41,16 @@ class MazeScene(IScene):
         # Draw as many cells as we can in 1/30th of a second, the human eye can't see more than 30 fps anyway
         start_time = pygame.time.get_ticks()
 
-        while pygame.time.get_ticks()-start_time<(1000/30):
+        while pygame.time.get_ticks()-start_time < (1000/30):
 
             if self.next_cell:
                 # if our last iteration found a cell, add it to the route and find the next one
                 self.next_cell = self.next_cell.add_to_route(self.maze, self.route)
 
                 # if we don't find a next cell, we've reached the end of the path, backtrack until we find a route
+                # TODO: parameterise random_branch and add to menu
                 if not self.next_cell:
-                    self.next_cell = mh.backtrack(self.route, random_branch=False)
+                    self.next_cell = mh.backtrack(self.route, random_branch=True)
 
                 self.route.append(self.next_cell)
 
@@ -68,10 +72,10 @@ class MazeScene(IScene):
         self.draw_maze(x, y)
 
     def draw_maze(self, x, y):
+        self.game_window.fill((225, 225, 225))
 
         self.maze = mh.setup_maze(self.cell_size, self.maze_width, self.maze_height)
         self.route = []
-        self.game_window.fill((225, 225, 225))
         route = mh.initialise_route(self.maze, x, y)
         self.next_cell = route[0]
 
@@ -80,43 +84,44 @@ class MazeScene(IScene):
         self.maze[0][0].exits["up"] = True
         self.maze[self.maze_width - 1][self.maze_height - 1].exits["right"] = True
 
+        # find all cells in the maze that are non-empty and need re-drawing
         for cell in [x for x in self.maze.flat if not x.empty and x.stale]:
             self.draw_walls_from_cell(cell)
             cell.stale = False
 
     def draw_walls_from_cell(self, cell):
-
-        left = cell.position[0] * self.cell_size + self.cell_size
-        right = left + self.cell_size
-        top = cell.position[1] * self.cell_size+self.cell_size
-        bottom = top + self.cell_size
-
         exit_colour = (255, 255, 255)
         wall_colour = (25 , 25 , 25 )
 
-        corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
+        # find edges of our cell in window-space
+
+        left = cell.position[0] * self.cell_size + self.margin
+        right = left + self.cell_size
+        top = cell.position[1] * self.cell_size+ self.margin
+        bottom = top + self.cell_size
+
+        # work out our lines based on our edges
         lines = {}
-        lines["right"]= [(right, top), (right, bottom)]
+        lines["right"] = [(right, top), (right, bottom)]
         lines["left"] = [(left, top), (left, bottom)]
         lines["up"] = [(left, top), (right, top)]
         lines["down"] = [(left, bottom), (right, bottom)]
 
+        # clear out any existing lines
         pygame.draw.rect(self.game_window,exit_colour,(left,top,self.cell_size,self.cell_size))
 
         for side in lines.keys():
             if not cell.exits[side]:
                 pygame.draw.line(self.game_window, wall_colour, lines[side][0], lines[side][1], 2)
 
+    def setup_window(self):
 
-    def setup_window(self,cell_size, maze_width, maze_height):
-        pygame.init()
+        window_width = self.maze_width*self.cell_size+self.margin*2
+        window_height = self.maze_height*self.cell_size+self.margin*2
 
-        window_width = maze_width*cell_size+cell_size*2
-        window_height = maze_height *cell_size+cell_size*2
-
-        pygame.display.set_caption("Maze Window")
+        pygame.display.set_caption(self.args["difficulty"] + " maze")
         window = pygame.display.set_mode((window_width, window_height))
-        window.fill((255, 123, 69))
+        window.fill((225, 225, 225))
 
         return window
 
