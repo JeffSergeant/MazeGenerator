@@ -1,74 +1,71 @@
 from Scenes.IScene import IScene
-
-
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk
+import mazehandling as mh
 
-EASY={"difficulty":"easy","cell_size":25,"maze_width":15,"maze_height":15}
-MEDIUM={"difficulty":"medium","cell_size":25,"maze_width":25,"maze_height":25}
-HARD={"difficulty":"hard","cell_size":10,"maze_width":50,"maze_height":50}
-MONSTER={"difficulty":"MONSTER","cell_size":5,"maze_width":250,"maze_height":150}
+EASY={"difficulty":"easy","cell_size":25,"maze_width":15,"maze_height":15,"branching_method":mh.BranchingMethod.LAST}
+MEDIUM={"difficulty":"medium","cell_size":25,"maze_width":25,"maze_height":25,"branching_method":mh.BranchingMethod.FIRST}
+HARD={"difficulty":"hard","cell_size":10,"maze_width":50,"maze_height":50,"branching_method":mh.BranchingMethod.RANDOM}
+MONSTER={"difficulty":"MONSTER","cell_size":5,"maze_width":250,"maze_height":150,"branching_method":mh.BranchingMethod.FIRST}
+
+TEXT_BOX = 0
+CHECK_BUTTON=1
+DROPDOWN = 2
+BUTTON = 3
 
 difficulty = {"easy":EASY,"medium":MEDIUM,"hard":HARD,"MONSTER":MONSTER}
 
 
 class MenuScene(IScene):
-    def __init__(self, next_scene,args=None):
-        self.args = args
+    def __init__(self, next_scene, args=difficulty["medium"]):
+
         self.next_scene = next_scene
         self.quit = False
 
-    def initialise(self):
-        self.root = Tk()
-        self.root.title("Maze")
+        self.args = args
 
+        self.root = tk.Tk()
+
+        self.difficulty_selected = tk.StringVar()
+        self.difficulty_selected.set(self.args["difficulty"])
+
+        self.cell_size = tk.StringVar()
+        self.cell_size.set(self.args["cell_size"])
+
+        self.width = tk.StringVar()
+        self.width.set(self.args["maze_width"])
+
+        self.height = tk.StringVar()
+        self.height.set(self.args["maze_height"])
+
+        self.branching_method = tk.StringVar()
+        self.branching_method.set(self.args["branching_method"].name)
+
+    def initialise(self):
+
+        self.root.title("Maze Menu")
         self.root.protocol("WM_DELETE_WINDOW", self.window_closed)
 
         self.mainframe = ttk.Frame(self.root, padding="3 3 12 12")
-        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
+        row = 0
+
+        row = create_label_and_control(self.mainframe, 'Difficulty', DROPDOWN, self.difficulty_selected, row, list(difficulty.keys())
+                                       , self.set_difficulty)
+
+        options = [method.name for method in mh.BranchingMethod]
+        row = create_label_and_control(self.mainframe, 'Branching Method:', DROPDOWN, self.branching_method, row,
+                                       options)
+
+        row = create_label_and_control(self.mainframe,'Cell Size (Pixels', TEXT_BOX,self.cell_size,row)
+        row = create_label_and_control(self.mainframe, 'Maze Width:', TEXT_BOX, self.width, row)
+        row = create_label_and_control(self.mainframe, 'Maze Height:', TEXT_BOX, self.height, row)
 
 
-        self.difficulty_selected = StringVar()
-        self.difficulty_selected.set(list(difficulty.keys())[0])
 
-        self.dropdown = OptionMenu(self.mainframe,self.difficulty_selected, *list(difficulty.keys()),command=self.set_difficulty)
-        self.dropdown.grid(row=0, column=1)
-
-        self.cell_size = StringVar()
-
-
-        size_label = ttk.Label(self.mainframe, text="Cell Size (pixels)")
-        size_label.grid(column=1, row=1, sticky=(W, E))
-
-        size_entry = ttk.Entry(self.mainframe, width=7, textvariable=self.cell_size)
-        size_entry.grid(column=2, row=1, sticky=(W, E))
-
-        self.width = StringVar()
-
-
-        width_label = ttk.Label(self.mainframe,text="Maze Width:")
-        width_label.grid(column=1, row=2, sticky=(W, E))
-
-        width_entry = ttk.Entry(self.mainframe, width=7, textvariable=self.width)
-        width_entry.grid(column=2, row=2, sticky=(W, E))
-
-        self.height = StringVar()
-
-        height_label = ttk.Label(self.mainframe, text="Maze Height")
-        height_label.grid(column=1, row=3, sticky=(W, E))
-
-        height_entry = ttk.Entry(self.mainframe, width=7, textvariable=self.height)
-        height_entry.grid(column=2, row=3, sticky=(W, E))
-
-        ttk.Button(self.mainframe, text="Generate Maze", command=self.load_maze).grid(column=2, row=4, sticky=W)
-
-        self.args = difficulty["medium"] if not self.args else self.args
-        self.difficulty_selected.set(self.args["difficulty"])
-        self.cell_size.set(self.args["cell_size"])
-        self.width.set(self.args["maze_width"] )
-        self.height.set(self.args["maze_height"])
+        row = create_label_and_control(self.mainframe, '', BUTTON, 'Create Maze', row,None,self.load_maze)
 
         return True
 
@@ -84,9 +81,9 @@ class MenuScene(IScene):
         args["cell_size"] = int(self.cell_size.get())
         args["maze_width"] = int(self.width.get())
         args["maze_height"] = int(self.height.get())
+        args["branching_method"] = mh.BranchingMethod[self.branching_method.get()]
         args["difficulty"] = self.difficulty_selected.get()
 
-        # print (args)
         self.root.destroy()
         if self.next_scene:
             return self.next_scene(args, MenuScene)
@@ -100,8 +97,30 @@ class MenuScene(IScene):
         self.cell_size.set(args["cell_size"])
         self.width.set(args["maze_width"])
         self.height.set(args["maze_height"])
+        self.branching_method.set(args["branching_method"].name)
 
     def load_maze(self, closed = False):
 
         self.quit = True
+
+
+def create_label_and_control(main,label,control_type,variable, row, options=[], command=None):
+
+    label = ttk.Label(main, text=label)
+    label.grid(column=1, row=row, sticky=(tk.W, tk.E))
+
+    if control_type == CHECK_BUTTON:
+        control = ttk.Checkbutton(main, width=7, variable=variable)
+
+    elif control_type == DROPDOWN:
+        control = tk.OptionMenu(main, variable, *options, command=command)
+
+    elif control_type == BUTTON:
+        control = tk.Button(main, text=variable, command=command)
+
+    else:
+        control = ttk.Entry(main, width=7, textvariable=variable)
+
+    control.grid(column=2, row=row, sticky=(tk.W, tk.E))
+    return row+1
 

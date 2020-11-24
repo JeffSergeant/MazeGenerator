@@ -6,9 +6,11 @@ import mazehandling as mh
 class MazeScene(IScene):
     def __init__(self, args, next_scene):
         self.args = args
+
         self.cell_size = args["cell_size"]
         self.maze_height = args["maze_height"]
         self.maze_width = args["maze_width"]
+        self.branching_method = args["branching_method"]
         self.margin = 10
 
         self.game_window = self.setup_window()
@@ -48,9 +50,8 @@ class MazeScene(IScene):
                 self.next_cell = self.next_cell.add_to_route(self.maze, self.route)
 
                 # if we don't find a next cell, we've reached the end of the path, backtrack until we find a route
-                # TODO: parameterise random_branch and add to menu
                 if not self.next_cell:
-                    self.next_cell = mh.backtrack(self.route, random_branch=True)
+                    self.next_cell = mh.backtrack(self.route, self.branching_method)
 
                 self.route.append(self.next_cell)
 

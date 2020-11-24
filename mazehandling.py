@@ -1,7 +1,6 @@
-import pygame
 import numpy as np
 import random
-import sys
+from enum import Enum
 
 
 class MazeCell:
@@ -44,9 +43,9 @@ class MazeCell:
 
         neighbouring_cells = [n for n in self.neighbours.values() if n is not None]
 
-        for number_of_neighbours in reversed(range(0, 4)):
+        for number_of_empty_neighbours in reversed(range(0, 4)):
 
-            valid_neighbours = [n for n in neighbouring_cells if n.empty and n.count_empty_neighbours() <= number_of_neighbours]
+            valid_neighbours = [n for n in neighbouring_cells if n.empty and n.count_empty_neighbours() <= number_of_empty_neighbours]
             #valid_neighbours = [n for n in neighbouring_cells if n.empty]
 
             if valid_neighbours:
@@ -88,12 +87,20 @@ def initialise_route(maze, starting_x, starting_y):
     return [next_cell]
 
 
-def backtrack(route, random_branch=False):
+class BranchingMethod(Enum):
+    FIRST = 0
+    LAST = 1
+    RANDOM = 2
+
+
+def backtrack(route, branching_method):
+    """For a given route, identify a cell with empty neighbours:
+    RANDOM picks a random cell, FIRST finds the earliest, LAST finds the last"""
     nonempty_cells = [n for n in route if n.count_empty_neighbours()]
     if nonempty_cells:
-        if random_branch:
+        if branching_method == BranchingMethod.RANDOM:
             return random.choice(nonempty_cells)
-        else:
+        elif branching_method == BranchingMethod.FIRST:
             return nonempty_cells[0]
-
-
+        elif branching_method == BranchingMethod.LAST:
+            return nonempty_cells[-1]
