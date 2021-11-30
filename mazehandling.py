@@ -3,15 +3,42 @@ import random
 from enum import Enum
 
 
+def test_prime(candidate):
+    if candidate < 2:
+        return False
+
+    for divisor in range(2, round(candidate / 2)):
+        if candidate / divisor == int(candidate / divisor):
+            return False
+    return True
+
+
+class MazeWrapper:
+    def __init__(self):
+        self.nextNumber = 1
+        self.f = open("c:\\test\\primes.txt", "r")
+        primes_list = [int(n) for n in self.f.readlines()]
+        self.max_prime = primes_list[-1]
+        self.primes = set(primes_list)
+
+    def test_prime(self, x):
+        if x <= self.max_prime:
+            return x in self.primes
+        else:
+            raise Exception("Not Enough Primes")
+
+
 class MazeCell:
-    def __init__(self, position, maze):
+    def __init__(self, position, maze, mazewrapper):
         self.position = position
         self.exits = {"left": 0, "down": 0, "up": 0, "right": 0}
         self.empty = True
         self.next = None
-        self.neighbours = {"left": None, "down": None, "up": None, "right": None}
+        self.neighbours = {"left": None, "down": None,"right": None, "up": None }
         self.maze = maze
         self.stale = False
+        self.mazewrapper = mazewrapper
+        self.start = False
 
     def get_neighbours(self):
         x, y = self.position
@@ -36,7 +63,7 @@ class MazeCell:
 
         return number_of_neighbours
 
-    def add_to_route(self, route, maze):
+    def add_to_route(self, route, maze, prime_counter=2):
 
         self.empty = False
         self.stale = True
@@ -50,9 +77,13 @@ class MazeCell:
 
             if valid_neighbours:
                 return self.add_random_neighbour(valid_neighbours)
+                #return self.add_neighbour_prime(valid_neighbours)
 
-    def add_random_neighbour(self, valid_neighbours):
-        neighbour = random.choice(valid_neighbours + [valid_neighbours[0]])
+    def add_random_neighbour(self, valid_neighbours, neighbour=None):
+
+        if not neighbour:
+
+            neighbour = random.choice(valid_neighbours)
 
         if neighbour == self.neighbours["left"]:
             self.exits["left"] = 1
@@ -68,13 +99,21 @@ class MazeCell:
             neighbour.exits["up"] = 1
         return neighbour
 
+    def add_neighbour_prime(self, valid_neighbours):
+        while True:
 
-def setup_maze(cell_size, maze_width, maze_height):
+            for neighbour in valid_neighbours:
+                self.mazewrapper.nextNumber = (self.mazewrapper.nextNumber + 2)
+                if self.mazewrapper.test_prime(self.mazewrapper.nextNumber) and neighbour:
+                    return self.add_random_neighbour(valid_neighbours, neighbour)
+
+
+def setup_maze(cell_size, maze_width, maze_height,mazewrapper):
     maze = np.zeros((maze_width, maze_height), MazeCell)
 
     for x in range(0, maze_width):
         for y in range(0, maze_height):
-            maze[x, y] = MazeCell((x, y), maze)
+            maze[x, y] = MazeCell((x, y), maze,mazewrapper)
 
     for cell in maze.flat:
         cell.get_neighbours()

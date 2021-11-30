@@ -62,9 +62,6 @@ class MenuScene(IScene):
         row = create_label_and_control(self.mainframe,'Cell Size (Pixels', TEXT_BOX,self.cell_size,row)
         row = create_label_and_control(self.mainframe, 'Maze Width:', TEXT_BOX, self.width, row)
         row = create_label_and_control(self.mainframe, 'Maze Height:', TEXT_BOX, self.height, row)
-
-
-
         row = create_label_and_control(self.mainframe, '', BUTTON, 'Create Maze', row,None,self.load_maze)
 
         return True
