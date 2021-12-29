@@ -192,18 +192,18 @@ class MazeCell:
 if __name__ == '__main__':
     import time
 
-
-    for branching_method in BranchingMethod:
+    for test_branching_method in BranchingMethod:
         start = time.time()
-        print(f"\n***{branching_method}***\n")
-        maze = Maze(100,250,branching_method=branching_method)
+        print(f"\n***{test_branching_method}***\n")
+        maze = Maze(10,25,branching_method=test_branching_method)
         end = time.time()
         maze.solve()
         starts = len([cell for cell in maze.maze.flat if cell.start])
         ends = len([cell for cell in maze.maze.flat if cell.end])
         unvisited = len([cell for cell in maze.maze.flat if cell.unvisited])
-        print(f'{branching_method} {starts} starts, {ends} ends, {unvisited} unvisited. {end - start}, "seconds")')
         print(str(maze)[0:2000])
+        print(f'{test_branching_method} {starts} starts, {ends} ends, {unvisited} unvisited. {end - start}, "seconds")')
+
         assert starts == 1 and ends == 1 and unvisited == 0
 
 
