@@ -115,10 +115,10 @@ class MazeCell:
         self.done = False
 
     def printable(self):
-        up = ' ' if self.exits['left'] else '-'
-        down = ' ' if self.exits['right'] else '-'
-        left = ' ' if self.exits['up'] else '|'
-        right = ' ' if self.exits['down'] else '|'
+        up = ' ' if self.exits['up'] else '-'
+        down = ' ' if self.exits['down'] else '-'
+        left = ' ' if self.exits['left'] else '|'
+        right = ' ' if self.exits['right'] else '|'
 
         printable = [f'+{up}+']
         printable.append(f'{left}{"X" if self.start else "O" if self.end else "." if self.onroute else " "}{right}')
@@ -134,16 +134,16 @@ class MazeCell:
         max_x, max_y = self.maze.shape
 
         if x > 0:
-            self.neighbours["left"] = self.maze[x - 1][y]
+            self.neighbours["up"] = self.maze[x - 1][y]
 
         if y > 0:
-            self.neighbours["up"] = self.maze[x][y - 1]
+            self.neighbours["left"] = self.maze[x][y - 1]
 
         if x + 1 < max_x:
-            self.neighbours["right"] = self.maze[x + 1][y]
+            self.neighbours["down"] = self.maze[x + 1][y]
 
         if y + 1 < max_y:
-            self.neighbours["down"] = self.maze[x][y + 1]
+            self.neighbours["right"] = self.maze[x][y + 1]
 
     def count_empty_neighbours(self):
 
