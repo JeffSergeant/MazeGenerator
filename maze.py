@@ -20,7 +20,7 @@ class Maze:
 
         for x in range(0, maze_width):
             for y in range(0, maze_height):
-                self.maze[x, y] = MazeCell((x, y), self.maze)
+                self.maze[x, y] = MazeCell((y, x), self.maze)
 
         for cell in self.maze.flat:
             cell.get_neighbours()
@@ -124,26 +124,26 @@ class MazeCell:
         printable.append(f'{left}{"X" if self.start else "O" if self.end else "." if self.onroute else " "}{right}')
         printable.append(f'+{down}+')
 
-        if self.position[1] > 0:
+        if self.position[0] > 0:
             printable = [p[1:3] for p in printable]
 
         return printable
 
     def get_neighbours(self):
         x, y = self.position
-        max_x, max_y = self.maze.shape
+        max_y, max_x = self.maze.shape
 
         if x > 0:
-            self.neighbours["up"] = self.maze[x - 1][y]
+            self.neighbours["left"] = self.maze[y][x-1]
 
         if y > 0:
-            self.neighbours["left"] = self.maze[x][y - 1]
+            self.neighbours["up"] = self.maze[y-1][x]
 
         if x + 1 < max_x:
-            self.neighbours["down"] = self.maze[x + 1][y]
+            self.neighbours["right"] = self.maze[y][x+1]
 
         if y + 1 < max_y:
-            self.neighbours["right"] = self.maze[x][y + 1]
+            self.neighbours["down"] = self.maze[y+1][x]
 
     def count_empty_neighbours(self):
 

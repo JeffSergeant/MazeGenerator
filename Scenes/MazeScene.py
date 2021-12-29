@@ -50,8 +50,8 @@ class MazeScene(IScene):
     def create_maze_on_mouseclick(self):
 
         clicked_location = pygame.mouse.get_pos()
-        x = ((clicked_location[0]-self.margin) // self.cell_size)
-        y = ((clicked_location[1]-self.margin) // self.cell_size)
+        x = ((clicked_location[1]-self.margin) // self.cell_size)
+        y = ((clicked_location[0]-self.margin) // self.cell_size)
         # if the click is outside the maze size, start from origin
 
         x = min(x, self.maze_width-1)
