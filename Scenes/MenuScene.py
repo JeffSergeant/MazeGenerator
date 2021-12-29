@@ -15,7 +15,6 @@ BUTTON = 3
 
 difficulty = {"easy":EASY,"medium":MEDIUM,"hard":HARD,"MONSTER":MONSTER}
 
-
 class MenuScene(IScene):
     def __init__(self, next_scene, args=difficulty["medium"]):
 

@@ -7,15 +7,12 @@ from maze import Maze
 class MazeScene(IScene):
     def __init__(self, args, next_scene):
         self.args = args
-
         self.cell_size = args["cell_size"]
         self.maze_height = args["maze_height"]
         self.maze_width = args["maze_width"]
         self.branching_method = args["branching_method"]
         self.margin = 10
-
         self.game_window = self.setup_window()
-
         self.next_cell = None
         self.next_scene = next_scene
         self.maze = []
@@ -79,7 +76,7 @@ class MazeScene(IScene):
 
         left = cell.position[0] * self.cell_size + self.margin
         right = left + self.cell_size
-        top = cell.position[1] * self.cell_size+ self.margin
+        top = cell.position[1] * self.cell_size + self.margin
         bottom = top + self.cell_size
 
         if cell.start:
