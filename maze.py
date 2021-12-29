@@ -30,24 +30,25 @@ class Maze:
     def create_maze(self, starting_position):
         starting_x, starting_y = starting_position
         self.maze[starting_x][starting_y].start = True
+        current_cell = self.maze[starting_x][starting_y]
+        self.route = [current_cell]
 
-        self.next_cell = self.maze[starting_x][starting_y]
-        self.route = [self.next_cell]
-
-        while self.next_cell:
-            prev_distance = self.next_cell.distance
+        while current_cell:
+            prev_distance = current_cell.distance
             # if our last iteration found a cell, add it to the route and find the next one
-            self.route.append(self.next_cell)
-            self.next_cell = self.next_cell.get_next_cell()
+            self.route.append(current_cell)
+            current_cell = current_cell.get_next_cell()
             # if we don't find a next cell, we've reached the end of the path, backtrack until we find a route
-            if not self.next_cell:
-                self.next_cell = self.backtrack()
+            if not current_cell:
+                current_cell = self.backtrack()
+
             else:
                 distance = prev_distance + 1
-                self.next_cell.distance = distance
+                current_cell.distance = distance
                 if distance > self.longest_route:
-                    self.last_cell = self.next_cell
+                    self.last_cell = current_cell
                     self.longest_route = distance
+
         self.last_cell.end = True
 
     def backtrack(self):
@@ -55,9 +56,9 @@ class Maze:
         For a given route, identify a cell with empty neighbours:
         RANDOM picks a random cell to restart from,
         FIRST finds the earliest cell with unvisited neighours,
-        LAST finds the last
+        LAST finds the last cell with unvisited neighours
         """
-        self.route = [c for c in self.route if not c.done]# Prune dead cells from route first
+        self.route = [c for c in self.route if not c.done]
 
         if self.branching_method == BranchingMethod.RANDOM:
             for i, n in enumerate([cell for cell in self.route if not cell.done]):
@@ -72,7 +73,6 @@ class Maze:
         elif self.branching_method == BranchingMethod.LAST:
             for i, n in enumerate(self.route[::-1]):
                 if n.count_empty_neighbours():
-                    self.route = self.route[0:-i]
                     return n
 
         else:
@@ -82,9 +82,7 @@ class Maze:
         next_cell = self.last_cell
         distance = next_cell.distance
         while distance > 1:
-
             next_cell = min([cell for direction,cell in next_cell.neighbours.items() if cell is not None and next_cell.exits[direction]])
-            #print(distance, next_cell.distance,min(next_cell.neighbours))
             next_cell.onroute = True
             distance = next_cell.distance
 
@@ -190,20 +188,23 @@ class MazeCell:
     def  __lt__(self,other):
         return self.distance<other.distance
 
+
 if __name__ == '__main__':
     import time
-    print("\n*****\n")
-    start = time.time()
+
+
     for branching_method in BranchingMethod:
-        maze = Maze(100,100,branching_method=branching_method)
+        start = time.time()
+        print(f"\n***{branching_method}***\n")
+        maze = Maze(100,250,branching_method=branching_method)
         end = time.time()
         maze.solve()
-
         starts = len([cell for cell in maze.maze.flat if cell.start])
         ends = len([cell for cell in maze.maze.flat if cell.end])
         unvisited = len([cell for cell in maze.maze.flat if cell.unvisited])
         print(f'{branching_method} {starts} starts, {ends} ends, {unvisited} unvisited. {end - start}, "seconds")')
-        print(str(maze)[0:1500])
+        print(str(maze)[0:2000])
+        assert starts == 1 and ends == 1 and unvisited == 0
 
 
 
