@@ -1,12 +1,12 @@
 from Scenes.IScene import IScene
 import tkinter as tk
 from tkinter import ttk
-import mazehandling as mh
+import maze
 
-EASY={"difficulty":"easy","cell_size":25,"maze_width":15,"maze_height":15,"branching_method":mh.BranchingMethod.LAST}
-MEDIUM={"difficulty":"medium","cell_size":25,"maze_width":25,"maze_height":25,"branching_method":mh.BranchingMethod.FIRST}
-HARD={"difficulty":"hard","cell_size":10,"maze_width":50,"maze_height":50,"branching_method":mh.BranchingMethod.RANDOM}
-MONSTER={"difficulty":"MONSTER","cell_size":5,"maze_width":250,"maze_height":150,"branching_method":mh.BranchingMethod.FIRST}
+EASY={"difficulty":"easy","cell_size":25,"maze_width":15,"maze_height":15,"branching_method":maze.BranchingMethod.LAST}
+MEDIUM={"difficulty":"medium","cell_size":25,"maze_width":25,"maze_height":25,"branching_method":maze.BranchingMethod.FIRST}
+HARD={"difficulty":"hard","cell_size":10,"maze_width":50,"maze_height":50,"branching_method":maze.BranchingMethod.RANDOM}
+MONSTER={"difficulty":"MONSTER","cell_size":5,"maze_width":250,"maze_height":150,"branching_method":maze.BranchingMethod.FIRST}
 
 TEXT_BOX = 0
 CHECK_BUTTON=1
@@ -55,7 +55,7 @@ class MenuScene(IScene):
         row = create_label_and_control(self.mainframe, 'Difficulty', DROPDOWN, self.difficulty_selected, row, list(difficulty.keys())
                                        , self.set_difficulty)
 
-        options = [method.name for method in mh.BranchingMethod]
+        options = [method.name for method in maze.BranchingMethod]
         row = create_label_and_control(self.mainframe, 'Branching Method:', DROPDOWN, self.branching_method, row,
                                        options)
 
@@ -78,7 +78,7 @@ class MenuScene(IScene):
         args["cell_size"] = int(self.cell_size.get())
         args["maze_width"] = int(self.width.get())
         args["maze_height"] = int(self.height.get())
-        args["branching_method"] = mh.BranchingMethod[self.branching_method.get()]
+        args["branching_method"] = maze.BranchingMethod[self.branching_method.get()]
         args["difficulty"] = self.difficulty_selected.get()
 
         self.root.destroy()
